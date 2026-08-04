@@ -611,10 +611,7 @@ use core::num::{NonZero, ZeroablePrimitive};
 extern_spec! {
     mod core {
         mod num {
-            trait ZeroablePrimitive
-            where
-                Self: View<ViewTy = Int>
-            {}
+            trait ZeroablePrimitive: View<ViewTy = Int> + DeepModel<DeepModelTy = Int> {}
         }
     }
 }
