@@ -603,3 +603,61 @@ spec_abs_diff!(u32, i32);
 spec_abs_diff!(u64, i64);
 spec_abs_diff!(u128, i128);
 spec_abs_diff!(usize, isize);
+
+/// Adds `View`, `DeepModel`, `Invariant`, and `extern_spec` entries for `core::num::NonZero<$t>`.
+macro_rules! nonzero_spec {
+    ($t:ty, $nonzero:ty) => {
+        impl View for $nonzero {
+            type ViewTy = Int;
+            #[logic(open, inline)]
+            fn view(self) -> Int {
+                pearlite! { self.get()@ }
+            }
+        }
+
+        impl DeepModel for $nonzero {
+            type DeepModelTy = Int;
+            #[logic(open, inline)]
+            fn deep_model(self) -> Int {
+                pearlite! { self@ }
+            }
+        }
+
+        impl Invariant for $nonzero {
+            #[logic(open)]
+            fn invariant(self) -> bool {
+                pearlite! { self@ != 0 }
+            }
+        }
+
+        extern_spec! {
+            impl $nonzero {
+                #[ensures(match result {
+                    None => n@ == 0,
+                    Some(nz) => n@ != 0 && nz@ == n@,
+                })]
+                fn new(n: $t) -> Option<$nonzero>;
+
+                #[requires(n@ != 0)]
+                #[ensures(result@ == n@)]
+                unsafe fn new_unchecked(n: $t) -> $nonzero;
+
+                #[ensures(result@ == self@)]
+                fn get(self) -> $t;
+            }
+        }
+    };
+}
+
+nonzero_spec!(u8, core::num::NonZeroU8);
+nonzero_spec!(u16, core::num::NonZeroU16);
+nonzero_spec!(u32, core::num::NonZeroU32);
+nonzero_spec!(u64, core::num::NonZeroU64);
+nonzero_spec!(u128, core::num::NonZeroU128);
+nonzero_spec!(usize, core::num::NonZeroUsize);
+nonzero_spec!(i8, core::num::NonZeroI8);
+nonzero_spec!(i16, core::num::NonZeroI16);
+nonzero_spec!(i32, core::num::NonZeroI32);
+nonzero_spec!(i64, core::num::NonZeroI64);
+nonzero_spec!(i128, core::num::NonZeroI128);
+nonzero_spec!(isize, core::num::NonZeroIsize);
