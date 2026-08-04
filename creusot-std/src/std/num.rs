@@ -617,7 +617,7 @@ extern_spec! {
 }
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive> View for NonZero<T> {
+impl<T: ZeroablePrimitive + View<ViewTy = Int> + DeepModel<DeepModelTy = Int>> View for NonZero<T> {
     type ViewTy = Int;
     #[trusted]
     #[logic]
@@ -627,7 +627,7 @@ impl<T: ZeroablePrimitive> View for NonZero<T> {
 }
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive> DeepModel for NonZero<T> {
+impl<T: ZeroablePrimitive + View<ViewTy = Int> + DeepModel<DeepModelTy = Int>> DeepModel for NonZero<T> {
     type DeepModelTy = Int;
     #[logic(open, inline)]
     fn deep_model(self) -> Int {
@@ -636,7 +636,7 @@ impl<T: ZeroablePrimitive> DeepModel for NonZero<T> {
 }
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive> Invariant for NonZero<T> {
+impl<T: ZeroablePrimitive + View<ViewTy = Int> + DeepModel<DeepModelTy = Int>> Invariant for NonZero<T> {
     #[logic(open)]
     fn invariant(self) -> bool {
         pearlite! { self@ != 0 }
@@ -645,7 +645,7 @@ impl<T: ZeroablePrimitive> Invariant for NonZero<T> {
 
 #[cfg(creusot)]
 extern_spec! {
-    impl<T: ZeroablePrimitive> NonZero<T> {
+    impl<T: ZeroablePrimitive + View<ViewTy = Int> + DeepModel<DeepModelTy = Int>> NonZero<T> {
         #[ensures(match result {
             None => n@ == 0,
             Some(nz) => n@ != 0 && nz@ == n@,
