@@ -620,7 +620,7 @@ extern_spec! {
 impl<T: ZeroablePrimitive + View<ViewTy = Int> + DeepModel<DeepModelTy = Int>> View for NonZero<T> {
     type ViewTy = Int;
     #[trusted]
-    #[logic]
+    #[logic(opaque)]
     fn view(self) -> Int {
         dead
     }
