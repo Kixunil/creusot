@@ -609,9 +609,10 @@ macro_rules! nonzero_spec {
     ($t:ty, $nonzero:ty) => {
         impl View for $nonzero {
             type ViewTy = Int;
-            #[logic(open, inline)]
+            #[trusted]
+            #[logic]
             fn view(self) -> Int {
-                pearlite! { self.get()@ }
+                dead
             }
         }
 
