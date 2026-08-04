@@ -608,7 +608,19 @@ spec_abs_diff!(usize, isize);
 use core::num::{NonZero, ZeroablePrimitive};
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive + View<ViewTy = Int>> View for NonZero<T> {
+extern_spec! {
+    mod core {
+        mod num {
+            trait ZeroablePrimitive
+            where
+                Self: View<ViewTy = Int>
+            {}
+        }
+    }
+}
+
+#[cfg(creusot)]
+impl<T: ZeroablePrimitive> View for NonZero<T> {
     type ViewTy = Int;
     #[trusted]
     #[logic]
@@ -618,7 +630,7 @@ impl<T: ZeroablePrimitive + View<ViewTy = Int>> View for NonZero<T> {
 }
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive + DeepModel<DeepModelTy = Int>> DeepModel for NonZero<T> {
+impl<T: ZeroablePrimitive> DeepModel for NonZero<T> {
     type DeepModelTy = Int;
     #[logic(open, inline)]
     fn deep_model(self) -> Int {
@@ -627,7 +639,7 @@ impl<T: ZeroablePrimitive + DeepModel<DeepModelTy = Int>> DeepModel for NonZero<
 }
 
 #[cfg(creusot)]
-impl<T: ZeroablePrimitive + View<ViewTy = Int>> Invariant for NonZero<T> {
+impl<T: ZeroablePrimitive> Invariant for NonZero<T> {
     #[logic(open)]
     fn invariant(self) -> bool {
         pearlite! { self@ != 0 }
@@ -636,7 +648,7 @@ impl<T: ZeroablePrimitive + View<ViewTy = Int>> Invariant for NonZero<T> {
 
 #[cfg(creusot)]
 extern_spec! {
-    impl<T: ZeroablePrimitive + View<ViewTy = Int>> NonZero<T> {
+    impl<T: ZeroablePrimitive> NonZero<T> {
         #[ensures(match result {
             None => n@ == 0,
             Some(nz) => n@ != 0 && nz@ == n@,
