@@ -637,11 +637,11 @@ macro_rules! nonzero_spec {
                     None => n@ == 0,
                     Some(nz) => n@ != 0 && nz@ == n@,
                 })]
-                fn new(n: $t) -> Option<$nonzero>;
+                fn new(n: $t) -> Option<Self>;
 
                 #[requires(n@ != 0)]
                 #[ensures(result@ == n@)]
-                unsafe fn new_unchecked(n: $t) -> $nonzero;
+                unsafe fn new_unchecked(n: $t) -> Self;
 
                 #[ensures(result@ == self@)]
                 fn get(self) -> $t;
