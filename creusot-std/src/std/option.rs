@@ -773,6 +773,7 @@ impl<'a, T> View for IterMut<'a, T> {
 }
 
 impl<T: Plain> Plain for Option<T> {
+    #[requires(inv(*snap))]
     #[ensures(*result == *snap)]
     #[check(ghost)]
     #[allow(unused_variables)]
@@ -795,7 +796,7 @@ impl<T> IteratorSpec for IterMut<'_, T> {
         pearlite! { (*self)@ == None && resolve(self) }
     }
 
-    #[logic(open)]
+    #[logic(open, inline)]
     fn produces(self, visited: Seq<Self::Item>, o: Self) -> bool {
         pearlite! {
             visited == Seq::empty() && self == o ||

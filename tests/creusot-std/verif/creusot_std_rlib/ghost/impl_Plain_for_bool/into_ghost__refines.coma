@@ -1,0 +1,15 @@
+(* <bool as ghost::Plain> *)
+
+type namespace_other
+
+type t_Namespace = Other namespace_other
+
+predicate inv_bool [@inline:trivial] (_1: bool) = true
+
+meta "rewrite_def" predicate inv_bool
+
+meta "compute_max_steps" 1000000
+
+meta "select_lsinst" "all"
+
+goal refines: forall snap: bool. inv_bool snap -> (forall result: bool. result = snap -> result = snap)

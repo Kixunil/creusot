@@ -963,6 +963,7 @@ impl<T: Clone + Copy> Clone for Seq<T> {
 
 impl<T: Copy> Copy for Seq<T> {}
 impl<T: Plain> Plain for Seq<T> {
+    #[requires(inv(*snap))]
     #[ensures(*result == *snap)]
     #[check(ghost)]
     #[allow(unused_variables)]
@@ -1101,12 +1102,12 @@ impl<T> Iterator for Iter<T> {
 }
 
 impl<T> IteratorSpec for Iter<T> {
-    #[logic(prophetic, open)]
+    #[logic(prophetic, inline, open)]
     fn produces(self, visited: Seq<T>, o: Self) -> bool {
         pearlite! { self@ == visited.concat(o@) }
     }
 
-    #[logic(prophetic, open)]
+    #[logic(prophetic, inline, open)]
     fn completed(&mut self) -> bool {
         pearlite! { self@ == Seq::empty() }
     }
