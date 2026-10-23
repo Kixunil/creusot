@@ -1,0 +1,48 @@
+use creusot.int.UInt8
+use creusot.prelude.Any
+use int.ComputerDivision
+use int.Int
+
+function view_NonZero_u8 [@inline:trivial] (self: UInt8.t) : int = UInt8.t'int self
+
+meta "rewrite_def" function view_NonZero_u8
+
+predicate inv_u8 [@inline:trivial] (_1: UInt8.t) = true
+
+meta "rewrite_def" predicate inv_u8
+
+predicate invariant_NonZero_u8 (self: UInt8.t) = view_NonZero_u8 self <> 0 /\ inv_u8 self
+
+predicate inv_NonZero_u8 [@inline:trivial] (_1: UInt8.t) = invariant_NonZero_u8 _1
+
+meta "rewrite_def" predicate inv_NonZero_u8
+
+let get_u8 (self: UInt8.t) (return (x: UInt8.t)) = {[@stop_split] [@expl:get 'self' type invariant] inv_NonZero_u8 self}
+  any [ return (result: UInt8.t) -> {[@stop_split] [@expl:get ensures] result = self} (! return {result}) ]
+
+constant const_MIN: UInt8.t = (0: UInt8.t)
+
+meta "compute_max_steps" 1000000
+
+meta "select_lsinst" "all"
+
+let extern_spec_Rem_NonZero_u8_u8_rem_body (self_: UInt8.t) (rhs: UInt8.t) (return (x: UInt8.t)) =
+{[@stop_split] [@expl:extern_spec_Rem_NonZero_u8_u8_rem_body requires] ([@stop_split] [@expl:extern_spec_Rem_NonZero_u8_u8_rem_body 'rhs' type invariant] inv_NonZero_u8 rhs)
+  /\ ([@stop_split] [@expl:extern_spec_Rem_NonZero_u8_u8_rem_body requires] not (UInt8.t'int self_
+    = UInt8.t'int const_MIN
+  /\ view_NonZero_u8 rhs = - 1))}
+  (! bb0
+  [ bb0 = s0
+    [ s0 = get_u8 {rhs} (fun (_x: UInt8.t) -> [ &_10 <- _x ] s1)
+    | s1 = [ &_12 <- _10 = (0: UInt8.t) ] s2
+    | s2 = {[@expl:remainder by zero] not _12} s3
+    | s3 = UInt8.rem {self_} {_10} (fun (_x: UInt8.t) -> [ &_ret <- _x ] s4)
+    | s4 = return {_ret} ] ]
+  [ & _ret: UInt8.t = Any.any_l ()
+  | & self_: UInt8.t = self_
+  | & rhs: UInt8.t = rhs
+  | & _10: UInt8.t = Any.any_l ()
+  | & _12: bool = Any.any_l () ])
+  [ return (result: UInt8.t) -> {[@stop_split] [@expl:extern_spec_Rem_NonZero_u8_u8_rem_body ensures] UInt8.t'int result
+    = ComputerDivision.mod (UInt8.t'int self_) (view_NonZero_u8 rhs)}
+    (! return {result}) ]

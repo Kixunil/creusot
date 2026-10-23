@@ -1,0 +1,12 @@
+{
+  "profile": [],
+  "proofs": {
+    "Coma": {
+      "vc_extern_spec_Div_NonZero_u128_u128_div_body": {
+        "prover": "alt-ergo",
+        "time": 0.009
+      },
+      "vc_get_u128": { "prover": "alt-ergo", "time": 0.009 }
+    }
+  }
+}

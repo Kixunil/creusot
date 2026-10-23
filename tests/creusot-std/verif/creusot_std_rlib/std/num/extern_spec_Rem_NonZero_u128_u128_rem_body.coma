@@ -1,0 +1,50 @@
+use creusot.int.UInt128
+use creusot.prelude.Any
+use int.ComputerDivision
+use int.Int
+
+function view_NonZero_u128 [@inline:trivial] (self: UInt128.t) : int = UInt128.t'int self
+
+meta "rewrite_def" function view_NonZero_u128
+
+predicate inv_u128 [@inline:trivial] (_1: UInt128.t) = true
+
+meta "rewrite_def" predicate inv_u128
+
+predicate invariant_NonZero_u128 (self: UInt128.t) = view_NonZero_u128 self <> 0 /\ inv_u128 self
+
+predicate inv_NonZero_u128 [@inline:trivial] (_1: UInt128.t) = invariant_NonZero_u128 _1
+
+meta "rewrite_def" predicate inv_NonZero_u128
+
+let get_u128 (self: UInt128.t) (return (x: UInt128.t)) =
+{[@stop_split] [@expl:get 'self' type invariant] inv_NonZero_u128 self}
+  any [ return (result: UInt128.t) -> {[@stop_split] [@expl:get ensures] result = self} (! return {result}) ]
+
+constant const_MIN: UInt128.t = (0: UInt128.t)
+
+meta "compute_max_steps" 1000000
+
+meta "select_lsinst" "all"
+
+let extern_spec_Rem_NonZero_u128_u128_rem_body (self_: UInt128.t) (rhs: UInt128.t) (return (x: UInt128.t)) =
+{[@stop_split] [@expl:extern_spec_Rem_NonZero_u128_u128_rem_body requires] ([@stop_split] [@expl:extern_spec_Rem_NonZero_u128_u128_rem_body 'rhs' type invariant] inv_NonZero_u128 rhs)
+  /\ ([@stop_split] [@expl:extern_spec_Rem_NonZero_u128_u128_rem_body requires] not (UInt128.t'int self_
+    = UInt128.t'int const_MIN
+  /\ view_NonZero_u128 rhs = - 1))}
+  (! bb0
+  [ bb0 = s0
+    [ s0 = get_u128 {rhs} (fun (_x: UInt128.t) -> [ &_10 <- _x ] s1)
+    | s1 = [ &_12 <- _10 = (0: UInt128.t) ] s2
+    | s2 = {[@expl:remainder by zero] not _12} s3
+    | s3 = UInt128.rem {self_} {_10} (fun (_x: UInt128.t) -> [ &_ret <- _x ] s4)
+    | s4 = return {_ret} ] ]
+  [ & _ret: UInt128.t = Any.any_l ()
+  | & self_: UInt128.t = self_
+  | & rhs: UInt128.t = rhs
+  | & _10: UInt128.t = Any.any_l ()
+  | & _12: bool = Any.any_l () ])
+  [ return (result: UInt128.t) ->
+  {[@stop_split] [@expl:extern_spec_Rem_NonZero_u128_u128_rem_body ensures] UInt128.t'int result
+    = ComputerDivision.mod (UInt128.t'int self_) (view_NonZero_u128 rhs)}
+    (! return {result}) ]

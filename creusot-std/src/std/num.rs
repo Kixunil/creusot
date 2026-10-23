@@ -369,6 +369,9 @@ macro_rules! spec_unsigned {
                     fn trailing_ones(self) -> u32;
             }
         }
+
+        spec_div_rem!{@nz Div, div, /, $type, $type, $type}
+        spec_div_rem!{@nz Rem, rem, %, $type, $type, $type}
     };
 }
 
@@ -515,6 +518,17 @@ macro_rules! spec_div_rem {
                 #[ensures(result@ == self@ $op rhs@)]
                 fn $divrem_method(self, rhs: $rhs) -> $type {
                     self $op rhs
+                }
+            }
+        }
+    };
+    (@nz $divrem_trait:ident, $divrem_method:ident, $op:tt, $type:ty, $lhs:ty, $rhs:ty) => {
+        extern_spec! {
+            impl $divrem_trait<NonZero<$rhs>> for $lhs {
+                #[requires(!(self@ == $type::MIN@ && rhs@ == -1))]
+                #[ensures(result@ == self@ $op rhs@)]
+                fn $divrem_method(self, rhs: NonZero<$rhs>) -> $type {
+                    self $op rhs.get()
                 }
             }
         }

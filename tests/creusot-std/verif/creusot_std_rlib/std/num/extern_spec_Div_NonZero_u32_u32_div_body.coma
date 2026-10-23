@@ -1,0 +1,50 @@
+use creusot.int.UInt32
+use creusot.prelude.Any
+use int.ComputerDivision
+use int.Int
+
+function view_NonZero_u32 [@inline:trivial] (self: UInt32.t) : int = UInt32.t'int self
+
+meta "rewrite_def" function view_NonZero_u32
+
+predicate inv_u32 [@inline:trivial] (_1: UInt32.t) = true
+
+meta "rewrite_def" predicate inv_u32
+
+predicate invariant_NonZero_u32 (self: UInt32.t) = view_NonZero_u32 self <> 0 /\ inv_u32 self
+
+predicate inv_NonZero_u32 [@inline:trivial] (_1: UInt32.t) = invariant_NonZero_u32 _1
+
+meta "rewrite_def" predicate inv_NonZero_u32
+
+let get_u32 (self: UInt32.t) (return (x: UInt32.t)) =
+{[@stop_split] [@expl:get 'self' type invariant] inv_NonZero_u32 self}
+  any [ return (result: UInt32.t) -> {[@stop_split] [@expl:get ensures] result = self} (! return {result}) ]
+
+constant const_MIN: UInt32.t = (0: UInt32.t)
+
+meta "compute_max_steps" 1000000
+
+meta "select_lsinst" "all"
+
+let extern_spec_Div_NonZero_u32_u32_div_body (self_: UInt32.t) (rhs: UInt32.t) (return (x: UInt32.t)) =
+{[@stop_split] [@expl:extern_spec_Div_NonZero_u32_u32_div_body requires] ([@stop_split] [@expl:extern_spec_Div_NonZero_u32_u32_div_body 'rhs' type invariant] inv_NonZero_u32 rhs)
+  /\ ([@stop_split] [@expl:extern_spec_Div_NonZero_u32_u32_div_body requires] not (UInt32.t'int self_
+    = UInt32.t'int const_MIN
+  /\ view_NonZero_u32 rhs = - 1))}
+  (! bb0
+  [ bb0 = s0
+    [ s0 = get_u32 {rhs} (fun (_x: UInt32.t) -> [ &_10 <- _x ] s1)
+    | s1 = [ &_12 <- _10 = (0: UInt32.t) ] s2
+    | s2 = {[@expl:division by zero] not _12} s3
+    | s3 = UInt32.div {self_} {_10} (fun (_x: UInt32.t) -> [ &_ret <- _x ] s4)
+    | s4 = return {_ret} ] ]
+  [ & _ret: UInt32.t = Any.any_l ()
+  | & self_: UInt32.t = self_
+  | & rhs: UInt32.t = rhs
+  | & _10: UInt32.t = Any.any_l ()
+  | & _12: bool = Any.any_l () ])
+  [ return (result: UInt32.t) ->
+  {[@stop_split] [@expl:extern_spec_Div_NonZero_u32_u32_div_body ensures] UInt32.t'int result
+    = ComputerDivision.div (UInt32.t'int self_) (view_NonZero_u32 rhs)}
+    (! return {result}) ]
