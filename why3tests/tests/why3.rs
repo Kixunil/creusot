@@ -4,6 +4,7 @@ use std::{
     env,
     fs::File,
     io::{BufRead, BufReader, IsTerminal, Write},
+    os::unix::fs::symlink,
     path::PathBuf,
     process::{Command, exit},
 };
@@ -70,13 +71,22 @@ fn main() {
     let time_re = Regex::new(r"TIME ((\d|\.)+)").unwrap();
     let depth_re = Regex::new(r"DEPTH ((\d|\.)+)").unwrap();
 
-    std::env::set_current_dir("..").unwrap();
+    // Make paths relative to tests
+    for file in &mut args.filter {
+        if let Some(stripped) = file.strip_prefix("tests/") {
+            *file = stripped.into();
+        }
+    }
+
+    std::env::set_current_dir("../tests").unwrap();
+    let _ = symlink("../examples", "examples");
+    let _ = symlink("../why3find.json", "why3find.json");
 
     // Use the Creusot installation for Why3, Why3find, and solvers (because they're a pain to keep track of if we allow them to come from anywhere)
     let paths = creusot_setup::creusot_paths();
 
     // Use the local prelude, so that it's easy to test quick changes.
-    let build_prelude = Command::new("cargo").args(["run", "--bin", "prelude-generator"]).status();
+    let build_prelude = Command::new("cargo").args(["run", "-p", "prelude-generator"]).status();
     if !build_prelude.unwrap().success() {
         panic!("prelude-generator failed");
     };
@@ -89,10 +99,10 @@ fn main() {
     let mut other_tests = vec![];
     let mut unused = vec![];
     let coma_files = [
-        "examples/**/*.coma",
-        "tests/creusot-std/verif/**/*.coma",
-        "tests/should_succeed/**/*.coma",
-        "tests/should_fail/**/*.coma",
+        "examples/**/*.coma", // symlinked from tests/
+        "creusot-std/verif/**/*.coma",
+        "should_succeed/**/*.coma",
+        "should_fail/**/*.coma",
     ]
     .into_iter()
     .flat_map(|s| glob::glob(s).unwrap());
@@ -175,7 +185,7 @@ fn main() {
         success = false;
     }
 
-    let library = std::env::current_dir().unwrap().join("target/creusot");
+    let library = std::env::current_dir().unwrap().parent().unwrap().join("target/creusot");
 
     let jobs = &format!("{}", args.jobs.unwrap_or_else(creusot_setup::default_provers_parallelism));
     let why3find = || {
@@ -185,7 +195,7 @@ fn main() {
             .env("WHY3CONFIG", paths.creusot_why3_conf())
             .env("DUNE_DIR_LOCATIONS", &format!("why3find:lib:{}", library.display()))
             .arg("prove")
-            .args(["--summary", "--no-autodetect", "-j", jobs]);
+            .args(["--summary", "--no-autodetect", "--no-autoload", "-j", jobs]);
         if args.no_cache {
             why3find.arg("--no-cache");
         }
@@ -411,7 +421,7 @@ fn main() {
 
 fn changed_comas(from: &str) -> Vec<PathBuf> {
     let output = Command::new("git")
-        .args(["diff", "--name-only", from, "tests", "examples"])
+        .args(["diff", "--name-only", from, ".", "../examples"])
         .output()
         .unwrap();
     if !output.status.success() {
@@ -422,7 +432,13 @@ fn changed_comas(from: &str) -> Vec<PathBuf> {
         .lines()
         .filter_map(|line| {
             let path = PathBuf::from(line.unwrap());
-            if path.extension().is_some_and(|e| e == "coma") { Some(path) } else { None }
+            if !path.extension().is_some_and(|e| e == "coma") {
+                None
+            } else if let Ok(path) = path.strip_prefix("tests") {
+                Some(path.into())
+            } else {
+                Some(path)
+            }
         })
         .collect()
 }

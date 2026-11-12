@@ -1,8 +1,0 @@
-{
-  "profile": [],
-  "proofs": {
-    "Coma": {
-      "vc_core_total_FMap_K_V": { "prover": "alt-ergo", "time": 0.041 }
-    }
-  }
-}
